@@ -22,10 +22,13 @@ There are 2 components in the model data:
 - unpack `nicerBgML.tgz`
 
 Running `nicerBgML.py -h` print some useful information on the usages:
-```sh
+```
 usage: nicerBgML.py [-h] [--dataDir dataDir] [--modelFile modelFile] [-v] obsID
 
-Estimate NICER background using Machine Learning. This is a basic version that uses 50 MPUs (standard minus 14 and 34). Version 0.1.t4n20 uses tBin=4 seconds and nGrp=20. - tBin is the time bin size use for constructing the model, and it is the time bin size that will be used when binning the MKF data. - nGrp is the number of basis spectra used in the modeling
+Estimate NICER background using Machine Learning. This is a basic version that uses 50 MPUs (standard minus 14 and 34).
+Version 0.1.t4n20 uses tBin=4 seconds and nGrp=20. - tBin is the time bin size use for constructing the model, and it is
+the time bin size that will be used when binning the MKF data. - nGrp is the number of basis spectra used in the
+modeling
 
 positional arguments:
   obsID                 The obsID for which the background spectrum is to be estimated
@@ -36,6 +39,7 @@ optional arguments:
   --modelFile modelFile
                         The name of the model npz file. Search in current folder and in dataDir (default: model.npz)
   -v, --version         show program's version number and exit
+  
 ```
 - If the folder containing the model data is `nicerBgML`, then from some `obsID` (e.g. `4693011001`), we use:
 ```
