@@ -17,6 +17,16 @@ There are 2 components in the model data:
 - `nicerBgML.py`: a python script that reads the model files (`model.npz`) and produces a background spectrum for a given obsID.
 - `nicerBgML.tgz`: The data of the model, and it includes two parts: the model files (`model.npz`) and the basis spectra `spec.*.pha`. The former is the numpy file that contains the trained model and related variables. The `spec.*.pha` are the basis spectra that are used to construct the background spectrum after the modeling.
 
+### Requirement
+- The script uses `fcurve` and `mathpha` from `ftools`, so a functioning installation of `heasoft` is needed.
+- The following python libraries are needed:
+    - `numpy`
+    - `astropy`
+    - `pandas`
+    - `sklearn`
+    
+The python libraries can be installed with `conda` or `pip` (e.g. `pip install numpy astropy pandas sklearn`)
+
 ### USAGE:
 - Download both `nicerBgML.py` and `nicerBgML.tgz` files.
 - unpack `nicerBgML.tgz`
