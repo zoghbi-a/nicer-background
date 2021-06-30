@@ -38,6 +38,11 @@ if __name__ == '__main__':
     args = p.parse_args()
     
     
+    # check if heasoft is initilized #
+    if not 'FTOOLS' in os.environ:
+        raise RuntimeError('heasoft does not appear to be initilized.')
+    
+    
     ## check in the input ##
     obsID = args.obsID
     if not os.path.exists(obsID):
