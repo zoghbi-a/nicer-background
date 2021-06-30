@@ -50,6 +50,9 @@ if __name__ == '__main__':
     dataDir = args.dataDir
     if not os.path.exists(dataDir):
         raise ValueError(f'Cannot find data directory {dataDir}')
+    # a naive way to check if dataDir is relative or absolute
+    if dataDir[0] != '/':
+        dataDir = os.getcwd() + '/' + dataDir
         
     modelFile = args.modelFile
     if not os.path.exists(modelFile):
@@ -115,7 +118,7 @@ if __name__ == '__main__':
     print('... Done'); print('-'*20)
     
     # create weighted background file #
-    os.chdir(f'{cwd}/{dataDir}')
+    os.chdir(dataDir)
     expr = '+'.join([f'{x:4.4}*spec.{i}.pha' for i,x in weights.items()])
     cmd = f'mathpha "{expr}" R spec.b.pha CALC NULL 0 clobber=yes'
     print(cmd)
