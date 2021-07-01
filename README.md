@@ -65,3 +65,9 @@ If everything runs correctly, the background spectrum `spec.b.pha` will be creat
 This is a basic version that uses 50 MPUs (standard 52 minus 14 and 34) using standard filtering criteria. If  you use a different number of MPUs, you will have to scale the background spectrum accordingly.
 
 If you use a filtering criterian that is different from the standard one in `nicerl2`, this model may not be applicable. I am working on ways to include non-standard selection criteria in the future.
+
+### Known Issues
+- If the script fails when running `fcurve`, then it is likely because a possible bug in `fcurve`. It cannot handle a long list of columns. The number of columns used here (15) cannot fit into the fortran character array used. A simple fix, until it is permanently fixed, is to change that manually and re-compile it.
+    - For heasoft version 6.28 for example, the source code is in `heasoft-6.28/ftools/futils/tasks/fcurve/fcurve.f`.
+    - Edit the lines that define `columns` amd `outcols` to use longer character length (the lines following `subroutine fcurve`). Change `character(80)` to `character(300)` for example.
+    - Then within `heasoft-6.28/ftools/futils/tasks/fcurve`, recompile the code by running: `hmake; hmake install`
