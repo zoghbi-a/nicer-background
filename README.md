@@ -27,30 +27,34 @@ There are 2 components in the model data:
     
 The python libraries can be installed with `conda` or `pip` (e.g. `pip install numpy astropy pandas sklearn`)
 
+- Version **0.2.t4n20** requires a geomagnetic data file (kpFile in the USAGE section below). The latest file can be downloaded from https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/kp_noaa.fits. The model was trained using the noaa data file, so it is suggested that it is the one used and not the Potsdam one (see discussion [here](https://heasarc.gsfc.nasa.gov/docs/nicer/analysis_threads/geomag/)).
+
+- See the **Known Issues** section below for a modification to the `fcurve` code that may be needed for the script to run correctly.
+
 ### USAGE:
 - Download both `nicerBgML.py` and `nicerBgML.tgz` files.
 - unpack `nicerBgML.tgz`
 
 Running `nicerBgML.py -h` print some useful information on the usages:
 ```
-usage: nicerBgML.py [-h] [--dataDir dataDir] [--modelFile modelFile] [-v] obsID
+usage: nicerBgML.py [-h] [--dataDir dataDir] [--modelFile modelFile] [-v] obsID kpFile
 
-Estimate NICER background using Machine Learning. This is a basic version that uses 50 MPUs 
-(standard minus 14 and 34).
-Version 0.1.t4n20 uses tBin=4 seconds and nGrp=20. 
-- tBin is the time bin size use for constructing the model, and it is the time bin size that
- will be used when binning the  MKF data. 
-- nGrp is the number of basis spectra used in the modeling
+Estimate NICER background using Machine Learning. This is a basic version that uses 50 MPUs (standard minus 14 and 34). Version
+0.2.t4n20 uses tBin=4 seconds and nGrp=20. Unlike 0.1.t4n20, this version include more MKF parameters, including the KP parameter used
+in the space weather model. - tBin is the time bin size use for constructing the model, and it is the time bin size that will be used
+when binning the MKF data. - nGrp is the number of basis spectra used in the modeling The kpFile parameter should point to the latest
+KP index file that can be downloaded from https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/kp_noaa.fits. See
+https://heasarc.gsfc.nasa.gov/docs/nicer/analysis_threads/geomag/ for details.
 
 positional arguments:
   obsID                 The obsID for which the background spectrum is to be estimated
+  kpFile                The KP index file. Download from: https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/kp_noaa.fits
 
 optional arguments:
   -h, --help            show this help message and exit
   --dataDir dataDir     The path to the directory containing the data (default: nicerBgML)
   --modelFile modelFile
-                        The name of the model npz file. Search in current folder and in dataDir 
-                        (default: model.npz)
+                        The name of the model npz file. Search in current folder and in dataDir (default: model.npz)
   -v, --version         show program's version number and exit
   
 ```
@@ -60,6 +64,11 @@ optional arguments:
 ```
 If everything runs correctly, the background spectrum `spec.b.pha` will be created inside `4693011001/spec`
 
+### VERSIONS:
+- **0.1.t4n20**: This is the first model presented at the NICER Observatory Science Working Group (OSWG) on June 30, 2021. It is based on a classification model that uses 15 parameters from the MKF file sampled every 4 seconds to classify the background data into 20 basis spectra. The root-mean-squared performance in the background estimates is `2.0` counts/s vs `3.2` in the 3C50 model. If the 1% outlier backgorund observations are discarded, the performance is `1.3` counts/s (vs `2.3` for the 3C50 model).
+
+
+- **0.2.t4n20**: This is an enhanced version of 0.1.t4n20, released on July 11, 2021. It is based on more MKKF parameters, 27 in total, including the KP index from the geomagnetic data. It is also a classification model that samples the MKF parameters every 4 seconds that classifies the background data into 20 basis spectra. The root-mean-squared performance in the background estimates is `1.7` counts/s vs `3.2` in the 3C50 model. If the 1% outlier backgorund observations are discarded, the performance is `0.87` counts/s (vs `2.3` for the 3C50 model).
 
 ### WARNING
 This is a basic version that uses 50 MPUs (standard 52 minus 14 and 34) using standard filtering criteria. If  you use a different number of MPUs, you will have to scale the background spectrum accordingly.
@@ -71,3 +80,5 @@ If you use a filtering criterian that is different from the standard one in `nic
     - For heasoft version 6.28 for example, the source code is in `heasoft-6.28/ftools/futils/tasks/fcurve/fcurve.f`.
     - Edit the lines that define `columns` amd `outcols` to use longer character length (the lines following `subroutine fcurve`). Change `character(80)` to `character(300)` for example.
     - Then within `heasoft-6.28/ftools/futils/tasks/fcurve`, recompile the code by running: `hmake; hmake install`
+    
+- Please report other issues running the model script [here](https://docs.google.com/forms/d/11BAm5DWL85VLaAMTv_cgM0v8PB_7UBLiNeJOyqep_9k)

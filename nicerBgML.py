@@ -10,7 +10,7 @@ import pandas as pd
 from sklearn.pipeline import Pipeline
 
 
-__version__ = '0.1.t4n20'
+__version__ = '0.2.t4n20'
 
 
 if __name__ == '__main__':
@@ -19,16 +19,25 @@ if __name__ == '__main__':
         Estimate NICER background using Machine Learning.
         
         This is a basic version that uses 50 MPUs (standard minus 14 and 34).
-        Version 0.1.t4n20 uses tBin=4 seconds and nGrp=20. 
+        Version 0.2.t4n20 uses tBin=4 seconds and nGrp=20. Unlike 0.1.t4n20, this
+        version include more MKF parameters, including the KP parameter used in
+        the space weather model.
         - tBin is the time bin size use for constructing the model, and it is 
         the time bin size that will be used when binning the MKF data.
         - nGrp is the number of basis spectra used in the modeling
+        
+        The kpFile parameter should point to the latest KP index file that can
+        be downloaded from https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/kp_noaa.fits.
+        See https://heasarc.gsfc.nasa.gov/docs/nicer/analysis_threads/geomag/ for details.
         
         ''',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter )
 
     p.add_argument("obsID", metavar="obsID", type=str,
             help="The obsID for which the background spectrum is to be estimated")
+    p.add_argument("kpFile", metavar="kpFile", type=str,
+            help=("The KP index file. Download from: "
+                  "https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/kp_noaa.fits"))
     p.add_argument("--dataDir", metavar="dataDir", type=str, default='nicerBgML',
             help="The path to the directory containing the data")
     p.add_argument("--modelFile", metavar="modelFile", type=str, default='model.npz',
@@ -51,6 +60,12 @@ if __name__ == '__main__':
     if len(obsID.split('/')) != 1:
         ss = obsID.split('/')
         obsID = ss[-1]
+
+    kpFile = args.kpFile
+    if not os.path.exists(kpFile):
+        raise ValueError((f'There is no kpFile file named {kpFile}. '
+                          'Please download from: '
+                          'https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/kp_noaa.fits'))
     
     dataDir = args.dataDir
     if not os.path.exists(dataDir):
@@ -73,7 +88,7 @@ if __name__ == '__main__':
     mod       = modData['mod'][()]
     tBin      = modData['tBin']
     mpuFilter = modData['mpuFilter']
-    mkfCols   = modData['mkfCols']
+    mkfCols   = modData['mkfCols'][()]
     XPreProc  = Pipeline(steps=[(f'step-{i}', x) for i,x in enumerate(modData['XPreProc'])])
     print('... Done'); print('-'*20)
     
@@ -85,9 +100,19 @@ if __name__ == '__main__':
 
 
     # bin the mkf file
-    print('reading MKF data ...')
     suff = f't{tBin}'
     pre = 'export HEADASNOQUERY=; export HEADASPROMPT=/dev/null;'
+    
+    # add the kp index to the mkf file
+    print('adding KP index to the MKF data ...')
+    cmd  = (f'geomagterp ../auxil/ni{obsID}.mkf INFILE {kpFile}')
+    info = subp.call(['/bin/bash', '-c', pre + cmd])
+    if info != 0:
+        raise RuntimeError(('Failed running geomagterp. '
+                            'Make sure the kp fits file is correct'))
+    print('... Done'); print('-'*20)
+    
+    print('reading MKF data ...')
     cmd = (f'fcurve infile=../auxil/ni{obsID}.mkf gtifile=../xti/event_cl/ni{obsID}_0mpu7_cl.evt[GTI] '
            f'outfile=ni.{suff}.mkf.tmp timecol=TIME columns="{mkfCols}" '
            f'binsz={tBin*1.0} lowval=INDEF highval=INDEF binmode=Mean '
@@ -97,6 +122,9 @@ if __name__ == '__main__':
     info = subp.call(['/bin/bash', '-c', pre + cmd])
     if info==0:
         os.system(f'rm ni.{suff}.mkf.tmp')
+    else:
+        print(('Running fcurve failed. For possible solutions, please have a look '
+               'at the Known Issues section on the website!'))
 
     
     # read the mkf data
@@ -110,7 +138,7 @@ if __name__ == '__main__':
     
     print('getting model predictions ...')
     # apply the model pre-processing to this obsID
-    XB = XPreProc.transform(mkfLcB.iloc[:,1:-1])
+    XB = XPreProc.transform(mkfLcB.loc[:,mkfCols.split(',')])
     
     # model prediction #
     yPred = mod.predict(XB)
