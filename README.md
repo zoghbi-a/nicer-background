@@ -24,8 +24,9 @@ There are 2 components in the model data:
     - `astropy`
     - `pandas`
     - `sklearn`
+    - `py-xgboost`
     
-The python libraries can be installed with `conda` or `pip` (e.g. `pip install numpy astropy pandas sklearn`)
+The python libraries can be installed with `conda` or `pip` (e.g. `pip install numpy astropy pandas sklearn py-xgboost`)
 
 - Version **0.2.t4n20** requires a geomagnetic data file (kpFile in the USAGE section below). The latest file can be downloaded from https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/kp_noaa.fits. The model was trained using the noaa data file, so it is suggested that it is the one used and not the Potsdam one (see discussion [here](https://heasarc.gsfc.nasa.gov/docs/nicer/analysis_threads/geomag/)).
 
