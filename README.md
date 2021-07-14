@@ -26,7 +26,9 @@ There are 2 components in the model data:
     - `sklearn`
     - `py-xgboost`
     
-The python libraries can be installed with `conda` or `pip` (e.g. `pip install numpy astropy pandas sklearn py-xgboost`)
+The python libraries can be installed with `conda` (e.g. `pip install numpy astropy pandas sklearn py-xgboost`).
+
+Note that py-xgboost is available only through conda not through pip. See the section "Known Issues" below.
 
 - Version **0.2.t4n20** requires a geomagnetic data file (kpFile in the USAGE section below). The latest file can be downloaded from https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/kp_noaa.fits. The model was trained using the noaa data file, so it is suggested that it is the one used and not the Potsdam one (see discussion [here](https://heasarc.gsfc.nasa.gov/docs/nicer/analysis_threads/geomag/)).
 
@@ -82,4 +84,12 @@ If you use a filtering criterian that is different from the standard one in `nic
     - Edit the lines that define `columns` amd `outcols` to use longer character length (the lines following `subroutine fcurve`). Change `character(80)` to `character(300)` for example.
     - Then within `heasoft-6.28/ftools/futils/tasks/fcurve`, recompile the code by running: `hmake; hmake install`
     
+- Installing xgboost may be problematic on some systems. If you are running python through anaconda (recommended), then
+  you can just install py-xgboost (conda install py-xgboost), that should be all that is needed.
+Installing xgboost from pip may give you an error related to libomp. In that case there a few options:
+    - install libomp with brew: brew install libomp; then install xgboost with pip: pip install xgboost
+    - build xgboost from source. See instructions in: https://xgboost.readthedocs.io/en/latest/build.html
+    - Install anaconda https://www.anaconda.com/products/individual, and install py-xgboost using: conda install
+      py-xgboost.
+
 - Please report other issues running the model script [here](https://docs.google.com/forms/d/11BAm5DWL85VLaAMTv_cgM0v8PB_7UBLiNeJOyqep_9k)
