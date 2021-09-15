@@ -64,12 +64,12 @@ optional arguments:
 ```
 - If the folder containing the model data is `nicerBgML`, then from some `obsID` (e.g. `4693011001`), we use:
 ```
-> python nicerBgML.py --dataDir ./nicerBgML  4693011001
+> python nicerBgML.py --dataDir ./nicerBgML  4693011001 /location/of/geomagnetic/data/
 ```
 If everything runs correctly, the background spectrum `spec.b.pha` will be created inside `4693011001/spec`
 
 ### VERSIONS:
-- **0.3.t1.35 (Latest)**: This version uses the latest heasoft updates (as of August 2021). The model is optimizd to work in the energy range **0.5-10** keV (unlike the previous version). It uses 40 MKF parameters, includeing those from the geomagnetic data. It is a classification model that samples the MKF parameters every 1 second end classifies the background data into 35 basis spectra. The root-mean-squared performance in the background estimates is `0.21` counts/s vs `4.04` in the 3C50 model. If the 1% outlier backgorund observations are discarded, the performance is `0.15` counts/s (vs `1.25` for the 3C50 model).
+- **0.3.t1.35 (Latest)**: This version uses the latest heasoft updates (as of August 2021). The model is optimizd to work in the energy range **0.5-10** keV (unlike the previous version). It uses 40 MKF parameters, including those from the geomagnetic data. It is a classification model that samples the MKF parameters every 1 second and classifies the background data into 35 basis spectra. The root-mean-squared performance in the background estimates is `0.21` counts/s vs `4.04` in the 3C50 model. If the 1% outlier backgorund observations are discarded, the performance is `0.15` counts/s (vs `1.25` for the 3C50 model).
 
 - **0.2.t4n20**: This is an enhanced version of 0.1.t4n20, released on July 11, 2021. It is based on more MKKF parameters, 27 in total, including the KP index from the geomagnetic data. It is also a classification model that samples the MKF parameters every 4 seconds that classifies the background data into 20 basis spectra. The root-mean-squared performance in the background estimates is `1.7` counts/s vs `3.2` in the 3C50 model. If the 1% outlier backgorund observations are discarded, the performance is `0.87` counts/s (vs `2.3` for the 3C50 model).
 
