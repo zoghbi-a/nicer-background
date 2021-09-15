@@ -10,7 +10,7 @@ import pandas as pd
 from sklearn.pipeline import Pipeline
 
 
-__version__ = '0.2.t4n20'
+__version__ = '0.3.t1n35'
 
 
 if __name__ == '__main__':
@@ -19,15 +19,17 @@ if __name__ == '__main__':
         Estimate NICER background using Machine Learning.
         
         This is a basic version that uses 50 MPUs (standard minus 14 and 34).
-        Version 0.2.t4n20 uses tBin=4 seconds and nGrp=20. Unlike 0.1.t4n20, this
-        version include more MKF parameters, including the KP parameter used in
+        Version 0.3.t1n35 uses tBin=1 seconds and 35 spectral bins (nGrp). The main difference
+        compared to other version is that we use more MKF parameters, plus this model
+        is optimized for the 0.5-10 keV band, not 0.2-10 keV, so it should be used
+        only above 0.5 keV.
         the space weather model.
         - tBin is the time bin size use for constructing the model, and it is 
         the time bin size that will be used when binning the MKF data.
         - nGrp is the number of basis spectra used in the modeling
         
-        The kpFile parameter should point to the latest KP index file that can
-        be downloaded from https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/kp_noaa.fits.
+        The kpDir parameter should point to the location of the geomagnetic data that 
+        can be downloaded from https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/kp_noaa.fits.
         See https://heasarc.gsfc.nasa.gov/docs/nicer/analysis_threads/geomag/ for details.
         
         ''',
@@ -35,9 +37,12 @@ if __name__ == '__main__':
 
     p.add_argument("obsID", metavar="obsID", type=str,
             help="The obsID for which the background spectrum is to be estimated")
-    p.add_argument("kpFile", metavar="kpFile", type=str,
-            help=("The KP index file. Download from: "
-                  "https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/kp_noaa.fits"))
+    p.add_argument("kpDir", metavar="kpDir", type=str,
+            help=("Location of the geomagnetic data. Download from: "
+                  "https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/; "
+                  "There are 6 files: dst_kyoto.fits f107_petincton.fits geomag.tar.gz "
+                  "kp_noaa.fits kp_potsdam.fits solarphi_oulu.fits"
+                  ))
     p.add_argument("--dataDir", metavar="dataDir", type=str, default='nicerBgML',
             help="The path to the directory containing the data")
     p.add_argument("--modelFile", metavar="modelFile", type=str, default='model.npz',
@@ -61,11 +66,11 @@ if __name__ == '__main__':
         ss = obsID.split('/')
         obsID = ss[-1]
 
-    kpFile = args.kpFile
-    if not os.path.exists(kpFile):
-        raise ValueError((f'There is no kpFile file named {kpFile}. '
-                          'Please download from: '
-                          'https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/kp_noaa.fits'))
+    kpDir = args.kpDir
+    if not os.path.exists(kpDir):
+        raise ValueError((f'There is no folder named {kpDir}. '
+                          'Please download all files from: '
+                          'https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/'))
     
     dataDir = args.dataDir
     if not os.path.exists(dataDir):
@@ -87,7 +92,6 @@ if __name__ == '__main__':
     modData = np.load(modelFile, allow_pickle=True)
     mod       = modData['mod'][()]
     tBin      = modData['tBin']
-    mpuFilter = modData['mpuFilter']
     mkfCols   = modData['mkfCols'][()]
     XPreProc  = Pipeline(steps=[(f'step-{i}', x) for i,x in enumerate(modData['XPreProc'])])
     print('... Done'); print('-'*20)
@@ -104,13 +108,19 @@ if __name__ == '__main__':
     pre = 'export HEADASNOQUERY=; export HEADASPROMPT=/dev/null;'
     
     # add the kp index to the mkf file
-    print('adding KP index to the MKF data ...')
-    cmd  = (f'geomagterp ../auxil/ni{obsID}.mkf INFILE {kpFile}')
+    print('Genrating MKF parameters ...')
+    extraOptions = (f'geomag_path={kpDir} '
+                     'filtcolumns=NICERV3,3C50 '
+                     'detlist=launch,-14,-34 min_fpm=50 '
+                     'tasks=MKF '
+                    )
+    cmd = f'nicerl2 {obsID} {extraOptions} clobber=yes'
+    os.chdir(f'{cwd}/{obsIDDir}/..')
     info = subp.call(['/bin/bash', '-c', pre + cmd])
     if info != 0:
-        raise RuntimeError(('Failed running geomagterp. '
-                            'Make sure the kp fits file is correct'))
+        raise RuntimeError(('Failed creating/updating MKF file.'))
     print('... Done'); print('-'*20)
+    os.chdir(f'{cwd}/{obsIDDir}/spec')
     
     print('reading MKF data ...')
     cmd = (f'fcurve infile=../auxil/ni{obsID}.mkf gtifile=../xti/event_cl/ni{obsID}_0mpu7_cl.evt[GTI] '
@@ -144,7 +154,7 @@ if __name__ == '__main__':
     yPred = mod.predict(XB)
     
     # Calcualte the weights #
-    gPred   = yPred.astype(np.int)
+    gPred   = yPred.astype(int)
     weights = pd.DataFrame({'weights':gPred+1}).groupby('weights').apply(len)/len(gPred)
     weights = weights[weights > 0]
     print(weights)
