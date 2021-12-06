@@ -15,7 +15,7 @@ This repository contains the trained model and spectral data that can be used to
 
 There are 2 components in the model data:
 - `nicerBgML.py`: a python script that reads the model files (`model.npz`) and produces a background spectrum for a given obsID.
-- [nicerBgML.tgz](https://osf.io/659fu/download): The data of the model, and it includes two parts: the model files (`model.npz`) and the basis spectra `spec.*.pha`. The former is the numpy file that contains the trained model and related variables. The `spec.*.pha` are the basis spectra that are used to construct the background spectrum after the modeling. This file can be [downloaded here](https://osf.io/659fu/download).
+- [nicerBgML_0.4.t1.200e.tgz](https://osf.io/dg72b/download): The data of the model, and it includes two parts: the model files (`model.npz`) and the basis spectra `spec.*.pha`. The former is the numpy file that contains the trained model and related variables. The `spec.*.pha` are the basis spectra that are used to construct the background spectrum after the modeling. This file can be [downloaded here](https://osf.io/dg72b/download).
 
 ### Requirement
 - The script uses `fcurve` and `mathpha` from `ftools` and `nicerl2`, so a functioning installation of `heasoft` is needed. The modeling was does using `heasoft-6.29c`, so it is recommended that the script is used with that version. Other versions of heasoft may fail to extract all the MKF parameters needed for the modeling.
@@ -30,7 +30,7 @@ The python libraries can be installed with `conda` (e.g. `pip install numpy astr
 
 Note that py-xgboost is available only through conda not through pip. See the section "Known Issues" below.
 
-- Version **0.3.t1n35** requires a geomagnetic data files that can be downloaded from https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag (see discussion [here](https://heasarc.gsfc.nasa.gov/docs/nicer/analysis_threads/geomag/)).. Please download the 6 files: `dst_kyoto.fits`, `f107_petincton.fits`, `geomag.tar.gz`, `kp_noaa.fits`, `kp_potsdam.fits`, `solarphi_oulu.fits` into some directory and then provide the location of that directory as input to the `nicerBgML.py` script. See USAGE section below.
+- Version **0.4.t1.200e** requires a geomagnetic data files that can be downloaded from https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag (see discussion [here](https://heasarc.gsfc.nasa.gov/docs/nicer/analysis_threads/geomag/)).. Please download the 6 files: `dst_kyoto.fits`, `f107_petincton.fits`, `geomag.tar.gz`, `kp_noaa.fits`, `kp_potsdam.fits`, `solarphi_oulu.fits` into some directory and then provide the location of that directory as input to the `nicerBgML.py` script. See USAGE section below.
 
 
 - See the **Known Issues** section below for a modification to the `fcurve` code that may be needed for the script to run correctly.
@@ -43,20 +43,22 @@ Running `nicerBgML.py -h` print some useful information on the usages:
 ```
 usage: nicerBgML.py [-h] [--dataDir dataDir] [--modelFile modelFile] [-v] obsID kpDir
 
-Estimate NICER background using Machine Learning. This is a basic version that uses 50 MPUs (standard minus 14 and 34).
-Version 0.3.t1n35 uses tBin=1 seconds and 35 spectral bins (nGrp). The main difference compared to other version is that we use more MKF parameters, plus this model is optimized for the 0.5-10 keV band, not 0.2-10 keV, so it should be used only above 0.5 keV. the space weather model. - tBin is the time bin size use for constructing the model, and it is the time bin size that will be used when binning the MKF data. - nGrp is the number of basis spectra used in the modeling The kpDir parameter should point to the location of the geomagnetic data that can be downloaded from https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/kp_noaa.fits. See
+Estimate NICER background using Machine Learning. This is a basic version that uses 50 MPUs (standard minus 14 and 34). Version 0.4.t1.200e uses tBin=1
+seconds and 50 spectral bins (nGrp). The main difference compared to other version is that we model the spectra in two bands: 0.2-0.4 and 0.4-15, so the model
+has the largest energy coverage of previously-released models. Similar to the 0.3 version model, we use more MKF parameters including the space weather model.
+- tBin is the time bin size used for constructing the model, and it is the time bin size that will be used when binning the MKF data. - nGrp is the number of
+basis spectra used in the modeling The kpDir parameter should point to the directory containing the geomagnetic data: dst_kyoto.fits, f107_petincton.fits,
+geomag.tar.gz, kp_noaa.fits, kp_potsdam.fits, solarphi_oulu.fits availabel in: https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag See
 https://heasarc.gsfc.nasa.gov/docs/nicer/analysis_threads/geomag/ for details.
 
 positional arguments:
   obsID                 The obsID for which the background spectrum is to be estimated
-  kpDir                 Location of the geomagnetic data. Download from:
-                        https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/; 
-                        There are 6 files: dst_kyoto.fits
-                        f107_petincton.fits geomag.tar.gz kp_noaa.fits kp_potsdam.fits solarphi_oulu.fits
+  kpDir                 Location of the geomagnetic data. Download from: https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/; There are 6 files:
+                        dst_kyoto.fits f107_petincton.fits geomag.tar.gz kp_noaa.fits kp_potsdam.fits solarphi_oulu.fits
 
 optional arguments:
   -h, --help            show this help message and exit
-  --dataDir dataDir     The path to the directory containing the data (default: nicerBgML)
+  --dataDir dataDir     The path to the directory containing the model data, including the basis spectra (default: nicerBgML)
   --modelFile modelFile
                         The name of the model npz file. Search in current folder and in dataDir (default: model.npz)
   -v, --version         show program's version number and exit
@@ -69,7 +71,10 @@ optional arguments:
 If everything runs correctly, the background spectrum `spec.b.pha` will be created inside `4693011001/spec`
 
 ### VERSIONS:
-- **0.3.t1.35 (Latest)**: This version uses the latest heasoft updates (as of August 2021). The model is optimizd to work in the energy range **0.5-10** keV (unlike the previous version). It uses 40 MKF parameters, including those from the geomagnetic data. It is a classification model that samples the MKF parameters every 1 second and classifies the background data into 35 basis spectra. The root-mean-squared performance in the background estimates is `0.21` counts/s vs `4.04` in the 3C50 model. If the 1% outlier backgorund observations are discarded, the performance is `0.15` counts/s (vs `1.25` for the 3C50 model).
+
+- **0.4.t1.200e (Latest)**: This is an updated version, published on December 6, 2021. The input parameters to the model are similar to the previous verion, but it is optimized for the whole **0.2-15** keV band. It works by modeling the data in 2 bands: 0.2-0.4 and 0.4-15 keV. It is a classification model that samples the MKF parameters every 1 second and classifies the background data into 50 basis spectra. The root-mean-squared performance in the background estimates is `1.5` counts/s vs `73` in the 3C50 model. If the 1% outlier backgorund observations are discarded, the performance is `0.7` counts/s (vs `9.6` for the 3C50 model), all measured over the whole 0.2-15 keV band.
+
+- **0.3.t1.35**: This version uses the latest heasoft updates (as of August 2021). The model is optimizd to work in the energy range **0.5-10** keV (unlike the previous version). It uses 40 MKF parameters, including those from the geomagnetic data. It is a classification model that samples the MKF parameters every 1 second and classifies the background data into 35 basis spectra. The root-mean-squared performance in the background estimates is `0.21` counts/s vs `4.04` in the 3C50 model. If the 1% outlier backgorund observations are discarded, the performance is `0.15` counts/s (vs `1.25` for the 3C50 model).
 
 - **0.2.t4n20**: This is an enhanced version of 0.1.t4n20, released on July 11, 2021. It is based on more MKKF parameters, 27 in total, including the KP index from the geomagnetic data. It is also a classification model that samples the MKF parameters every 4 seconds that classifies the background data into 20 basis spectra. The root-mean-squared performance in the background estimates is `1.7` counts/s vs `3.2` in the 3C50 model. If the 1% outlier backgorund observations are discarded, the performance is `0.87` counts/s (vs `2.3` for the 3C50 model).
 

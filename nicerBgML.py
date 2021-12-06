@@ -10,7 +10,7 @@ import pandas as pd
 from sklearn.pipeline import Pipeline
 
 
-__version__ = '0.3.t1n35'
+__version__ = '0.4.t1.200e'
 
 
 if __name__ == '__main__':
@@ -19,17 +19,17 @@ if __name__ == '__main__':
         Estimate NICER background using Machine Learning.
         
         This is a basic version that uses 50 MPUs (standard minus 14 and 34).
-        Version 0.3.t1n35 uses tBin=1 seconds and 35 spectral bins (nGrp). The main difference
-        compared to other version is that we use more MKF parameters, plus this model
-        is optimized for the 0.5-10 keV band, not 0.2-10 keV, so it should be used
-        only above 0.5 keV.
-        the space weather model.
-        - tBin is the time bin size use for constructing the model, and it is 
+        Version 0.4.t1.200e uses tBin=1 seconds and 50 spectral bins (nGrp). The main difference
+        compared to other version is that we model the spectra in two bands: 0.2-0.4 and 0.4-15, so the model
+        has the largest energy coverage of previously-released models. Similar to the 0.3 version model,
+        we use more MKF parameters including the space weather model.
+        - tBin is the time bin size used for constructing the model, and it is 
         the time bin size that will be used when binning the MKF data.
         - nGrp is the number of basis spectra used in the modeling
         
-        The kpDir parameter should point to the location of the geomagnetic data that 
-        can be downloaded from https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag/kp_noaa.fits.
+        The kpDir parameter should point to the directory containing the geomagnetic data:
+        dst_kyoto.fits, f107_petincton.fits, geomag.tar.gz, kp_noaa.fits, kp_potsdam.fits, solarphi_oulu.fits
+        availabel in: https://heasarc.gsfc.nasa.gov/FTP/caldb/data/gen/pcf/geomag
         See https://heasarc.gsfc.nasa.gov/docs/nicer/analysis_threads/geomag/ for details.
         
         ''',
@@ -44,7 +44,7 @@ if __name__ == '__main__':
                   "kp_noaa.fits kp_potsdam.fits solarphi_oulu.fits"
                   ))
     p.add_argument("--dataDir", metavar="dataDir", type=str, default='nicerBgML',
-            help="The path to the directory containing the data")
+            help="The path to the directory containing the model data, including the basis spectra")
     p.add_argument("--modelFile", metavar="modelFile", type=str, default='model.npz',
             help="The name of the model npz file. Search in current folder and in dataDir")
     
