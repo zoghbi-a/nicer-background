@@ -16,7 +16,9 @@ __version__ = '0.4.t1.200e'
 if __name__ == '__main__':
     p   = argparse.ArgumentParser(
         description='''
-        Estimate NICER background using Machine Learning.
+        Estimate NICER background light curve using Machine Learning at 1 second intervals.
+        This uses the same model in the spectral version nicerBgML.py, 
+        but generate light cruves instead of spectra.
         
         This is a basic version that uses 50 MPUs (standard minus 14 and 34).
         Version 0.4.t1.200e uses tBin=1 seconds and 50 spectral bins (nGrp). The main difference
@@ -103,8 +105,8 @@ if __name__ == '__main__':
     # extract mkf data #
     cwd = os.getcwd()
     os.chdir(obsIDDir)
-    os.system('mkdir -p spec')
-    os.chdir('spec')
+    os.system('mkdir -p lc')
+    os.chdir('lc')
 
 
     # bin the mkf file
@@ -124,7 +126,7 @@ if __name__ == '__main__':
     if info != 0:
         raise RuntimeError(('Failed creating/updating MKF file.'))
     print('... Done'); print('-'*20)
-    os.chdir(f'{cwd}/{obsIDDir}/spec')
+    os.chdir(f'{cwd}/{obsIDDir}/lc')
     
     print('reading MKF data ...')
     cmd = (f'fcurve infile=../auxil/ni{obsID}.mkf gtifile=../xti/event_cl/ni{obsID}_0mpu7_cl.evt[GTI] '
@@ -167,23 +169,6 @@ if __name__ == '__main__':
     with open('lc_background.dat', 'w') as fp: fp.write(lctxt)
     
     # we don't need the rest of the code
-    exit(0)
+    print('lc_background.dat generated sucessfully!')
     ## ----------- ##
-    
-    weights = pd.DataFrame({'weights':gPred+1}).groupby('weights').apply(len)/len(gPred)
-    weights = weights[weights > 0]
-    print(weights)
-    print('... Done'); print('-'*20)
-    
-    # create weighted background file #
-    os.chdir(dataDir)
-    expr = '+'.join([f'{x:4.4}*spec.{i}.pha' for i,x in weights.items()])
-    cmd = f'mathpha "{expr}" R spec.b.pha CALC NULL 0 clobber=yes'
-    print(cmd)
-    info = subp.call(['/bin/bash', '-c', pre + cmd])
-    if info != 0:
-        raise RuntimeError(f'Combining the spectra failed: \n{cmd}')
-    info = os.system(f'mv spec.b.pha {cwd}/{obsIDDir}/spec/')
-    if info == 0:
-        print(f'Background file {obsIDDir}/spec/spec.b.pha created successfully'); print('-'*20)
     
