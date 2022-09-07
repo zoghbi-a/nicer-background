@@ -24,7 +24,7 @@ There are 2 components in the model data:
     - `astropy`
     - `pandas`
     - `sklearn`
-    - `py-xgboost`
+    - `py-xgboost==1.3.3`
     
 The python libraries can be installed with `conda` (e.g. `pip install numpy astropy pandas sklearn py-xgboost`).
 
@@ -89,8 +89,8 @@ If you use a filtering criterian that is different from the standard one in `nic
 ### Known Issues
 - If the script fails when running `fcurve`, then it is likely because a possible bug in `fcurve`. It cannot handle a long list of columns. The number of columns used here (15) cannot fit into the fortran character array used. A simple fix, until it is permanently fixed, is to change that manually and re-compile it.
     - For heasoft version 6.29 for example, the source code is in `heasoft-6.28/ftools/futils/tasks/fcurve/fcurve.f`.
-    - Edit the lines that define `columns` amd `outcols` to use longer character length (the lines following `subroutine fcurve`). Change `character(80)` to `character(300)` for example.
-    - Then within `heasoft-6.29/ftools/futils/tasks/fcurve`, recompile the code by running: `hmake; hmake install`
+    - Edit the lines that define `columns` amd `outcols` to use longer character length (the lines following `subroutine fcurve`). Change `character(80)` to `character(N)` for some large number `N` (e.g. 2000).
+    - Then within `heasoft-6.29/ftools/futils`, recompile the code by running: `hmake; hmake install`
     
 - Installing xgboost may be problematic on some systems. If you are running python through anaconda (recommended), then
   you can just install py-xgboost (conda install py-xgboost), that should be all that is needed.
