@@ -162,7 +162,7 @@ if __name__ == '__main__':
     
     # create weighted background file #
     os.chdir(dataDir)
-    expr = '+'.join([f'{x:4.4}*spec.{i}.pha' for i,x in weights.items()])
+    expr = '+'.join([f'{x:6.6}*spec.{i}.pha' for i,x in weights.items()])
     cmd = f'mathpha "{expr}" R spec.b.pha CALC NULL 0 clobber=yes'
     print(cmd)
     info = subp.call(['/bin/bash', '-c', pre + cmd])
